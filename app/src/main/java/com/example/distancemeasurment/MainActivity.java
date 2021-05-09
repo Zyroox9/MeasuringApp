@@ -1,39 +1,32 @@
 package com.example.distancemeasurment;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private static MainActivity instance;
+
+    public static MainActivity getInstance() {
+        return instance;
+    }
 
     //Dotyczące kamery
     private android.hardware.Camera camera;
@@ -50,19 +43,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private float[] floatOrientation = new float[3];
     private float[] floatRotationMatrix = new float[9];
+    private levelThread thread = new levelThread(this, floatOrientation);
 
+    private int userHeight;
 
-    //kamera nowa
-    private TextureView textureView;
-    private String cameraId;
-    private CameraDevice cameraDevice;
-    private CameraCaptureSession cameraCaptureSessions;
-    private CaptureRequest.Builder captureRequestBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        instance = this;
 
 //        Chowanie navbara i statusbara
         View decorView = getWindow().getDecorView();
@@ -127,6 +117,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Button helpButton = findViewById(R.id.btnHelp);
         helpButton.setOnClickListener(this);
 
+        //Ustawianie customowego listenera - uruchamia się w momencie zbyt mocnego przechylenia urządzenia
+        thread.setlevelThreadListener(new levelThread.levelThreadListener() {
+            @Override
+            public void levelingNeeded(boolean needLeftRotation) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        popLevelWarning(needLeftRotation);
+                    }
+                });
+            }
+
+            @Override
+            public void levelResetNeeded() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        resetLevelPop();
+                    }
+                });
+            }
+        });
+
+        //Uruchomienie wątku obsługującego poziomowanie urządzenia
+        thread.start();
     }
 
 
@@ -135,19 +150,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick (View v) {
         switch (v.getId()) {
             case R.id.btnCapture:
-                System.out.println("Azimuth: " + floatOrientation[0] + "\nPitch: " + floatOrientation[1] + "\nRoll: " + floatOrientation[2]);
-                TextView txtMessage = findViewById(R.id.textView);
+                hideKeybaord(v);
+                TextView resultText = findViewById(R.id.resultText);
+                EditText inputText = findViewById(R.id.heightInput);
 
-                double distance = calculateDistance(floatOrientation);
+                String enteredHeight = inputText.getText().toString();
 
-                txtMessage.setText(
-                        "Azimuth: " + floatOrientation[0] +
-                        "\nPitch: " + floatOrientation[1] +
-                        "\nRoll: " + floatOrientation[2] +
-                        "\nDistance: " + distance);
+                double distance = calculateDistance(floatOrientation, enteredHeight);
+
+                resultText.setText("Odległość: " + Math.round(distance * 100.0) / 100.0 + " m");
                 break;
 
             case R.id.btnHelp:
+                hideKeybaord(v);
                 startActivity(new Intent(MainActivity.this, PopHelp.class));
                 break;
 
@@ -156,17 +171,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public double calculateDistance(float [] floatOrientation) {
+    public double calculateDistance(float [] floatOrientation, String enteredHeight) {
         double distance;
+        double phoneAttitudeInMeters;
 
-        if(this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
-            distance = 1.5 * Math.tan(-floatOrientation[1]);
+        if(enteredHeight.equals("")) {
+            Toast.makeText(this, "Podaj wzrost", Toast.LENGTH_SHORT).show();
+            distance = 0;
         } else {
-            distance = 1.5 * Math.tan(-floatOrientation[2]);
+            userHeight = Integer.parseInt(enteredHeight);
+
+            if (userHeight > 220)
+                phoneAttitudeInMeters = (double) userHeight / 100;
+            else
+                phoneAttitudeInMeters = (double) userHeight / 100 - 0.3;
+
+            if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE) {
+                distance = phoneAttitudeInMeters * Math.tan(-floatOrientation[1]);
+            } else {
+                distance = phoneAttitudeInMeters * Math.tan(-floatOrientation[2]);
+            }
         }
         return distance;
     }
 
+    public void popLevelWarning (boolean needLeftRotation) {
+        if(needLeftRotation) {
+            ImageView leftArrow = findViewById(R.id.arrowTurnLeft);
+            TextView leftText = findViewById(R.id.textTurnLeft);
 
+            leftArrow.setVisibility(View.VISIBLE);
+            leftText.setVisibility(View.VISIBLE);
+        } else {
+            ImageView rightArrow = findViewById(R.id.arrowTurnRight);
+            TextView rightText = findViewById(R.id.textTurnRight);
 
+            rightArrow.setVisibility(View.VISIBLE);
+            rightText.setVisibility(View.VISIBLE);
+        }
+        return;
+    }
+
+    public void resetLevelPop() {
+
+            ImageView leftArrow = findViewById(R.id.arrowTurnLeft);
+            TextView leftText = findViewById(R.id.textTurnLeft);
+
+            leftArrow.setVisibility(View.GONE);
+            leftText.setVisibility(View.GONE);
+
+            ImageView rightArrow = findViewById(R.id.arrowTurnRight);
+            TextView rightText = findViewById(R.id.textTurnRight);
+
+            rightArrow.setVisibility(View.GONE);
+            rightText.setVisibility(View.GONE);
+    }
+
+    private void hideKeybaord(View v) {
+        InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(v.getApplicationWindowToken(),0);
+    }
 }
