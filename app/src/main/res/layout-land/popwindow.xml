@@ -22,8 +22,8 @@
         android:id="@+id/helpText1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="36dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
         android:text="1. Wpisz swój wzrost"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -31,45 +31,43 @@
 
     <ImageView
         android:id="@+id/helpImg1"
-        android:layout_width="185dp"
-        android:layout_height="222dp"
-        android:layout_marginTop="4dp"
+        android:layout_width="173dp"
+        android:layout_height="68dp"
+        android:layout_marginStart="40dp"
         android:src="@mipmap/help_img_1"
-        app:layout_constraintStart_toStartOf="@id/helpText1"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@+id/helpText1"
+        app:layout_constraintStart_toEndOf="@+id/helpText1"
+        app:layout_constraintTop_toTopOf="@+id/helpText1" />
 
     <TextView
         android:id="@+id/helpText2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="124dp"
+        android:layout_marginTop="32dp"
+        android:width="200dp"
         android:text="2. Stojąc na wyprostowanych nogach, ustaw celownik na styku mierzonego przedmiotu z ziemią"
         android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/helpText1"
-        />
+        app:layout_constraintStart_toStartOf="@+id/helpImg1"
+        app:layout_constraintTop_toBottomOf="@+id/helpImg1" />
 
     <ImageView
         android:id="@+id/helpImg2"
-        android:layout_width="186dp"
-        android:layout_height="213dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="146dp"
+        android:layout_height="162dp"
         android:src="@mipmap/help_img_2"
-        app:layout_constraintStart_toStartOf="@id/helpText2"
-        app:layout_constraintTop_toBottomOf="@id/helpText2" />
+        app:layout_constraintBottom_toBottomOf="@+id/helpText2"
+        app:layout_constraintStart_toStartOf="@+id/helpText1"
+        app:layout_constraintTop_toTopOf="@+id/helpText2" />
 
     <TextView
         android:id="@+id/helpText3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:text="3. Kliknij 'Zmierz'"
         android:textSize="18sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/helpImg2"
-        />
+        app:layout_constraintStart_toStartOf="@+id/helpText2"
+        app:layout_constraintTop_toBottomOf="@+id/helpText2" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
