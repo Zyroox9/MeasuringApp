@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Distance Measurment</string>
+    <string name="app_name">Dalmierz</string>
     <string name="capture_btn_name">Zmierz</string>
     <string name="height_input_field">Twój wzrost [cm]</string>
     <string name="right_arrow_text">Obróć w prawo!</string>

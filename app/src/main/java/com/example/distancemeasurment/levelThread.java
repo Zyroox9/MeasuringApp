@@ -2,7 +2,6 @@ package com.example.distancemeasurment;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.widget.TextView;
 
 public class levelThread extends Thread {
 
@@ -43,7 +42,7 @@ public class levelThread extends Thread {
             }
 
         try {
-            Thread.sleep(200);                                 //Co sekundę sprawdzamy, czy urządzenie jest pionowo
+            Thread.sleep(200);                                 //Co 200ms sprawdzamy, czy urządzenie jest pionowo
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
